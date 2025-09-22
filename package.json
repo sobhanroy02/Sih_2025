@@ -6,7 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:setup": "node scripts/migrate.js setup",
+    "db:test": "node scripts/test-connection.js",
+    "migrate:create": "node scripts/migrate.js create",
+    "migrate:list": "node scripts/migrate.js list",
+    "env:validate": "npx tsx scripts/validate-env.ts",
+    "setup:complete": "npm run env:validate && npm run db:test"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.8",
