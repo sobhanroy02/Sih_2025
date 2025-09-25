@@ -1,31 +1,80 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-// Client-side Supabase client
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Client-side Supabase client (guard against missing env vars in local demo)
+export const supabase = ((): ReturnType<typeof createClient> | null => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.warn('[supabase] Environment variables missing; returning null client')
+    }
+    return null
+  }
+  return createClient(url, key)
+})()
 
 // Server-side Supabase client
 export function createServerSupabaseClient() {
+  // In some Next.js versions/types this may be typed as Promise<ReadonlyRequestCookies>
+  // so normalize to a sync-like accessor.
+  const possibleStore = cookies() as unknown
+  type CookieValue = { value?: string }
+  interface CookieStoreLike {
+    get?: (name: string) => CookieValue | undefined
+    set?: (args: { name: string; value: string; [k: string]: unknown }) => void
+  }
+  const getStore = (): CookieStoreLike | undefined => {
+    if (
+      typeof (possibleStore as { then?: unknown })?.then === 'function'
+    )
+      return undefined
+    return possibleStore as CookieStoreLike
+  }
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) {
+    interface MinimalServerAuthClient {
+      auth: { getUser: () => Promise<{ data: { user: null }; error: null }> }
+    }
+    const stub: MinimalServerAuthClient = {
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: null }),
+      },
+    }
+    return stub as unknown as SupabaseClient
+  }
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    key,
     {
       cookies: {
-        async get(name: string) {
-          const cookieStore = await cookies();
-          return cookieStore.get(name)?.value;
+        get(name: string) {
+          const store = getStore()
+          return store?.get?.(name)?.value
         },
-        async set(name: string, value: string, options: CookieOptions) {
-          const cookieStore = await cookies();
-          cookieStore.set(name, value, options);
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            const store = getStore()
+            store?.set?.({ name, value, ...options })
+          } catch {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
-        async remove(name: string, options: CookieOptions) {
-          const cookieStore = await cookies();
-          cookieStore.set(name, '', options);
+        remove(name: string, options: CookieOptions) {
+          try {
+            const store = getStore()
+            store?.set?.({ name, value: '', ...options })
+          } catch {
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
       },
     }
@@ -33,16 +82,14 @@ export function createServerSupabaseClient() {
 }
 
 // Admin client for server-side operations
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+export const supabaseAdmin: SupabaseClient | null = (() => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const service = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !service) return null
+  return createClient(url, service, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+})()
 
 // GeoJSON types for PostGIS
 export type Point = {

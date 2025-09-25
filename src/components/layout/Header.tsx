@@ -4,7 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
-import { GlobeAltIcon, LanguageIcon } from '@heroicons/react/24/outline'
+import { LanguageIcon } from '@heroicons/react/24/outline'
 
 export function Header() {
   return (
@@ -14,8 +14,14 @@ export function Header() {
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-primary-600 to-teal-500">
-                <GlobeAltIcon className="h-5 w-5 text-white" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden bg-transparent">
+                <img
+                  src="/icons/logo.png"
+                  width={32}
+                  height={32}
+                  alt="CitiZen App Logo"
+                  className="h-8 w-8 object-contain"
+                />
               </div>
               <span className="text-xl font-bold font-heading text-gray-900 dark:text-white">
                 CitiZen
@@ -60,7 +66,7 @@ export function Header() {
               <Link href="/login">
                 <Button variant="ghost">Sign In</Button>
               </Link>
-              <Link href="/signup">
+              <Link href="/login">
                 <Button variant="gradient">Get Started</Button>
               </Link>
             </div>

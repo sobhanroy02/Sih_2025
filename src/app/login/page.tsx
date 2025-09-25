@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -95,8 +96,37 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
       
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex min-h-[calc(100vh-4rem)] items-stretch py-12 px-4 sm:px-6 lg:px-10 gap-12 flex-col lg:flex-row">
+        {/* Marketing Images Section */}
+        <div className="relative flex-1 max-w-xl mx-auto w-full lg:block hidden">
+          <div className="grid grid-cols-2 gap-4 h-full content-start">
+            <div className="relative h-56 rounded-xl overflow-hidden shadow ring-1 ring-black/10 bg-white/40 backdrop-blur-sm">
+              <Image 
+                src="/cleanest-cities-in-india-1.jpg" 
+                alt="Cleanest city visual"
+                fill 
+                sizes="(max-width:1024px) 50vw, 25vw" 
+                className="object-cover" 
+                priority
+              />
+            </div>
+            <div className="relative h-56 rounded-xl overflow-hidden shadow ring-1 ring-black/10 bg-white/40 backdrop-blur-sm mt-8">
+              <Image 
+                src="/cleanest-cities-in-india-2.jpg" 
+                alt="Sustainable green city"
+                fill 
+                sizes="(max-width:1024px) 50vw, 25vw" 
+                className="object-cover" 
+              />
+            </div>
+            <div className="col-span-2 mt-8 text-center px-4">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 via-blue-600 to-emerald-600 bg-clip-text text-transparent font-heading">Cleaner • Smarter • Connected</h2>
+              <p className="mt-3 text-sm text-gray-600">Unified login for citizens, administrators & field workers.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full max-w-md space-y-8 mx-auto flex flex-col justify-center">
           <div className="text-center">
             <div className="flex justify-center mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-primary-600 to-teal-500">

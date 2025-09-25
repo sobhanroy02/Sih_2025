@@ -1,7 +1,8 @@
-import { NextConfig } from 'next'
 import withPWA from 'next-pwa'
 
-const nextConfig: NextConfig = {
+// NOTE: Avoid strict typing with NextConfig here due to mismatch between next and @types/next-pwa bundled Next types.
+// If needed, refine with Partial<...> or upgrade next-pwa types.
+const nextConfig = {
   experimental: {
     turbo: {
       rules: {
@@ -37,4 +38,4 @@ const pwaConfig = withPWA({
   buildExcludes: [/middleware-manifest\.json$/],
 })
 
-export default pwaConfig(nextConfig)
+export default pwaConfig(nextConfig as any)
