@@ -226,8 +226,14 @@ export default function ReportPage() {
                         Location
                       </label>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        <Button type="button" onClick={useCurrentLocation} className="justify-center">
-                          <MapPinIcon className="h-4 w-4 mr-2" /> Use current location
+                        <Button
+                          type="button"
+                          onClick={useCurrentLocation}
+                          variant="gradient"
+                          className="justify-center"
+                          leftIcon={<MapPinIcon className="h-4 w-4" />}
+                        >
+                          Use current location
                         </Button>
                         <input
                           type="text"
@@ -305,7 +311,12 @@ export default function ReportPage() {
                     </div>
 
                     <div className="pt-2">
-                      <Button type="submit" disabled={!canSubmit} className="w-full justify-center">
+                      <Button
+                        type="submit"
+                        disabled={!canSubmit}
+                        variant="ghost"
+                        className="w-full justify-center !bg-primary-700 !text-white !hover:bg-primary-800 !focus-visible:ring-primary-600 disabled:opacity-100 disabled:!bg-primary-700 disabled:!text-white"
+                      >
                         {submitting ? 'Submitting…' : submitted ? 'Submitted ✅' : 'Submit Report'}
                       </Button>
                     </div>
