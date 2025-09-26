@@ -63,7 +63,7 @@ export default function Dashboard() {
 
   const quickActions = [
     {
-      name: 'Report New Issue',
+      name: 'Report an Issue',
       description: 'Report a municipal issue in your area',
       href: '/report',
       icon: PlusIcon,
@@ -177,7 +177,7 @@ export default function Dashboard() {
                   <div className="rounded-2xl bg-white/70 dark:bg-gray-900/60 backdrop-blur ring-1 ring-gray-200/60 dark:ring-white/10 p-6 min-h-[112px] flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className={`p-3 rounded-xl ${action.iconBg} shadow-md ring-1 ring-white/20 transform transition-transform duration-300 group-hover:scale-110` }>
-                        {action.name === 'Report New Issue' ? (
+                        {action.name === 'Report an Issue' ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src="/icons/report-new.svg" alt="Report" className="h-6 w-6" />
                         ) : (
@@ -240,41 +240,41 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2 mt-12">
+        <div className="grid gap-6 lg:grid-cols-2 mt-12 items-stretch">
           {/* Recent Activity */}
-          <div className="rounded-2xl p-[1px] bg-gradient-to-br from-sky-400/50 via-indigo-400/40 to-violet-400/50">
-            <Card className="rounded-2xl p-0 bg-white/70 dark:bg-gray-900/60 backdrop-blur ring-1 ring-gray-200/60 dark:ring-white/10">
+          <div className="rounded-2xl h-full">
+            <Card className="rounded-2xl p-0 h-full flex flex-col bg-fuchsia-50/70 dark:bg-fuchsia-950/20 backdrop-blur ring-1 ring-fuchsia-200/60 dark:ring-fuchsia-700/50">
               <CardHeader className="px-6 pt-6">
                 <CardTitle className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-500 ring-1 ring-white/20 shadow-md">
+                  <span className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 ring-1 ring-white/20 shadow-md">
                     <ClockIcon className="h-4 w-4 text-white" />
                   </span>
                   <span>Recent Activity</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="p-6 flex-1 flex flex-col">
                 <div className="space-y-4">
                   {recentActivity.map((activity, i) => (
                     <div key={activity.id} className="flex gap-3 items-start animate-[fade-in-up_0.5s_ease-out]" style={{ animationDelay: `${i * 60}ms` }}>
                       <div className={`mt-1 h-2 w-2 rounded-full ${
-                        activity.type === 'resolved' ? 'bg-green-500' : activity.type === 'update' ? 'bg-blue-500' : 'bg-yellow-500'
+                        activity.type === 'resolved' ? 'bg-green-500' : activity.type === 'update' ? 'bg-pink-500' : 'bg-yellow-500'
                       }`} />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {activity.action}
                         </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
                           {activity.description}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                           {activity.time}
                         </p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-4">
-                  <Button variant="outline" className="w-full transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" size="sm">
+                <div className="mt-auto pt-4">
+                  <Button variant="outline" className="w-full border-fuchsia-300 text-fuchsia-700 hover:bg-fuchsia-100 dark:border-fuchsia-700 dark:text-fuchsia-300 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" size="sm">
                     View All Activity
                   </Button>
                 </div>
@@ -283,8 +283,8 @@ export default function Dashboard() {
           </div>
 
           {/* Nearby Issues Map Preview */}
-          <div className="rounded-2xl p-[1px] bg-gradient-to-br from-fuchsia-400/50 via-purple-400/40 to-pink-400/50">
-            <Card className="rounded-2xl p-0 bg-white/70 dark:bg-gray-900/60 backdrop-blur ring-1 ring-gray-200/60 dark:ring-white/10">
+          <div className="rounded-2xl p-[1px] h-full bg-gradient-to-br from-fuchsia-400/50 via-purple-400/40 to-pink-400/50">
+            <Card className="rounded-2xl p-0 h-full flex flex-col bg-white/70 dark:bg-gray-900/60 backdrop-blur ring-1 ring-gray-200/60 dark:ring-white/10">
               <CardHeader className="px-6 pt-6">
                 <CardTitle className="flex items-center gap-2">
                   <span className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 ring-1 ring-white/20 shadow-md">
@@ -293,7 +293,7 @@ export default function Dashboard() {
                   <span>Nearby Issues</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="p-6 flex-1 flex flex-col">
                 <div className="rounded-xl p-[1px] bg-gradient-to-br from-fuchsia-300/40 via-purple-300/30 to-pink-300/40 mb-4">
                   <div className="bg-gray-100 dark:bg-gray-800 rounded-[0.65rem] h-48 flex items-center justify-center">
                     <div className="text-center">
@@ -313,7 +313,7 @@ export default function Dashboard() {
                     <span className="text-sm font-medium text-green-600">8</span>
                   </div>
                 </div>
-                <div className="mt-4">
+                <div className="mt-auto pt-4">
                   <Link href="/community">
                     <Button variant="outline" className="w-full transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" size="sm">
                       View All Community Issues
@@ -325,28 +325,28 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Achievement Banner */}
-        <Card className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10
-                         dark:from-emerald-900/20 dark:via-teal-900/20 dark:to-cyan-900/20
-                         backdrop-blur ring-1 ring-white/30 dark:ring-white/10">
+  {/* Achievement Banner */}
+  <Card className="mt-12 md:mt-16 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-yellow-500/10
+                         dark:from-amber-900/20 dark:via-orange-900/20 dark:to-yellow-900/20
+                         backdrop-blur ring-1 ring-amber-200/60 dark:ring-amber-700/40">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-emerald-100/80 dark:bg-emerald-800/60 rounded-full flex items-center justify-center ring-1 ring-white/30">
-                  <CheckCircleIcon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                <div className="w-12 h-12 bg-amber-100/80 dark:bg-amber-800/60 rounded-full flex items-center justify-center ring-1 ring-white/30">
+                  <CheckCircleIcon className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-medium text-emerald-900 dark:text-emerald-100">
+                <h3 className="text-lg font-medium text-amber-900 dark:text-amber-100">
                   Achievement Unlocked: Community Guardian
                 </h3>
-                <p className="text-emerald-700 dark:text-emerald-300">
+                <p className="text-amber-700 dark:text-amber-300">
                   You&apos;ve successfully reported and helped resolve 5 community issues. Keep making a difference!
                 </p>
               </div>
               <div className="flex-shrink-0">
                 <Link href="/profile">
-                  <Button variant="outline" size="sm" className="border-emerald-300 text-emerald-700 hover:bg-emerald-100">
+                  <Button variant="outline" size="sm" className="border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300">
                     View Achievements
                   </Button>
                 </Link>

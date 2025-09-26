@@ -1,382 +1,417 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import React, { useMemo, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import CitizenNavbar from '@/components/layout/CitizenNavbar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { useAuthStore, useIssuesStore, type IssueCategory, type IssuePriority } from '@/store'
-import { 
-  MapPinIcon,
+import {
+  ExclamationTriangleIcon,
+  LightBulbIcon,
+  TrashIcon,
+  BeakerIcon,
+  BoltIcon,
+  ShieldExclamationIcon,
+  EllipsisHorizontalCircleIcon,
   PhotoIcon,
-  ExclamationTriangleIcon
+  FilmIcon,
+  MapPinIcon,
+  ClipboardDocumentCheckIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 
-interface IssueFormData {
-  category: string
-  title: string
-  description: string
-  address: string
-  landmarks?: string
-  severity: string
-  contactTime?: string
-  coordinates?: { lat: number; lng: number }
+type Severity = 'Low' | 'Medium' | 'High' | 'Critical'
+
+type MediaItem = {
+  file: File
+  url: string
+  kind: 'image' | 'video'
 }
 
-export default function ReportIssuePage() {
-  const router = useRouter()
-  const { user } = useAuthStore()
-  const { addIssue } = useIssuesStore()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [useCurrentLocation, setUseCurrentLocation] = useState(false)
-  const [selectedImages, setSelectedImages] = useState<File[]>([])
-  const [previewUrls, setPreviewUrls] = useState<string[]>([])
+export default function ReportPage() {
+  // Form state
+  const [category, setCategory] = useState<string>('Pothole / Road Damage')
+  const [customCategory, setCustomCategory] = useState('')
+  const [media, setMedia] = useState<MediaItem[]>([])
+  const [address, setAddress] = useState('')
+  const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null })
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [severity, setSeverity] = useState<Severity>('Medium')
+  const [confirmed, setConfirmed] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
-  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<IssueFormData>()
+  const categories = useMemo(
+    () => [
+      { name: 'Pothole / Road Damage', icon: ExclamationTriangleIcon },
+      { name: 'Street Light Issue', icon: LightBulbIcon },
+      { name: 'Garbage / Waste', icon: TrashIcon },
+      { name: 'Water Leakage', icon: BeakerIcon },
+      { name: 'Power Outage', icon: BoltIcon },
+      { name: 'Public Safety', icon: ShieldExclamationIcon },
+      { name: 'Other', icon: EllipsisHorizontalCircleIcon },
+    ],
+    []
+  )
 
-  const issueCategories = [
-    { id: 'pothole', name: 'Pothole', icon: '🚧', description: 'Road damage and potholes' },
-    { id: 'streetlight', name: 'Street Light', icon: '💡', description: 'Street lighting issues' },
-    { id: 'garbage', name: 'Garbage/Waste', icon: '🗑️', description: 'Waste management problems' },
-    { id: 'water', name: 'Water Issue', icon: '💧', description: 'Water supply or drainage' },
-    { id: 'graffiti', name: 'Graffiti', icon: '🎨', description: 'Vandalism and graffiti' },
-    { id: 'road', name: 'Road Damage', icon: '🛣️', description: 'General road maintenance' },
-    { id: 'other', name: 'Other', icon: '📝', description: 'Other municipal issues' },
-  ]
-
-  const severityLevels = [
-    { id: 'low', name: 'Low', color: 'bg-green-100 text-green-800 border-green-200' },
-    { id: 'medium', name: 'Medium', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-    { id: 'high', name: 'High', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-    { id: 'critical', name: 'Critical', color: 'bg-red-100 text-red-800 border-red-200' },
-  ]
-
-  const getCurrentLocation = () => {
-    setUseCurrentLocation(true)
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords
-          // In a real app, you'd reverse geocode this to get an address
-          setValue('address', `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
-          setValue('coordinates', { lat: latitude, lng: longitude })
-        },
-        (error) => {
-          console.error('Error getting location:', error)
-          setUseCurrentLocation(false)
-        }
-      )
-    }
-  }
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || [])
-    if (files.length + selectedImages.length > 5) {
-      alert('Maximum 5 images allowed')
-      return
-    }
-
-    setSelectedImages(prev => [...prev, ...files])
-    
-    // Create preview URLs
-    files.forEach(file => {
+  function onSelectFiles(files: FileList | null) {
+    if (!files) return
+    const items: MediaItem[] = []
+    for (const file of Array.from(files)) {
       const url = URL.createObjectURL(file)
-      setPreviewUrls(prev => [...prev, url])
-    })
-  }
-
-  const removeImage = (index: number) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index))
-    setPreviewUrls(prev => {
-      URL.revokeObjectURL(prev[index])
-      return prev.filter((_, i) => i !== index)
-    })
-  }
-
-  const onSubmit = async (data: IssueFormData) => {
-    setIsSubmitting(true)
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      const newIssue = {
-        id: crypto.randomUUID(),
-        title: data.title,
-        description: data.description,
-        category: data.category as IssueCategory,
-        priority: data.severity as IssuePriority,
-        status: 'open' as const,
-        location: {
-          address: data.address,
-          coordinates: data.coordinates || { lat: 0, lng: 0 },
-        },
-        images: previewUrls, // In real app, upload to server first
-        reportedBy: user?.id || '',
-        reportedAt: new Date(),
-        updatedAt: new Date(),
-        upvotes: 0,
-        comments: [],
-      }
-
-      addIssue(newIssue)
-      router.push('/dashboard')
-    } catch (error) {
-      console.error('Error submitting issue:', error)
-    } finally {
-      setIsSubmitting(false)
+      const kind = file.type.startsWith('video') ? 'video' : 'image'
+      items.push({ file, url, kind })
     }
+    setMedia((prev) => [...prev, ...items])
+  }
+
+  async function useCurrentLocation() {
+    if (!('geolocation' in navigator)) return alert('Geolocation is not supported on this browser.')
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+      },
+      (err) => {
+        alert('Could not fetch location: ' + err.message)
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
+  function removeMedia(url: string) {
+    setMedia((prev) => prev.filter((m) => m.url !== url))
+  }
+
+  const canSubmit =
+    title.trim().length > 2 &&
+    description.trim().length > 10 &&
+    (address.trim().length > 2 || (coords.lat && coords.lng)) &&
+    confirmed &&
+    !submitting
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!canSubmit) return
+    setSubmitting(true)
+    // Simulate submit
+    setTimeout(() => {
+      setSubmitting(false)
+      setSubmitted(true)
+    }, 1000)
   }
 
   return (
-    <DashboardLayout userType="citizen">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-heading">
-            Report an Issue
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Help improve your community by reporting municipal issues
-          </p>
+    <>
+      <CitizenNavbar />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        {/* Top row: heading + hero copy (left), empty right to keep balance like home */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <section className="lg:col-span-7">
+            <h1 className="text-2xl sm:text-3xl font-heading font-bold text-slate-800">
+              Report an Issue
+            </h1>
+            <p className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 via-blue-600 to-emerald-600 bg-clip-text text-transparent">
+              Help improve your community.
+            </p>
+            <p className="mt-4 max-w-2xl text-slate-600">
+              Help improve your community by reporting civic issues. Your reports help local authorities respond faster and more effectively.
+            </p>
+          </section>
+          <aside className="lg:col-span-5 hidden lg:block">
+            <div className="relative h-40 rounded-2xl overflow-hidden ring-1 ring-blue-200/60 shadow-sm bg-slate-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/source.png" alt="City illustration" className="object-cover object-center w-full h-full" />
+            </div>
+          </aside>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* Issue Category Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Issue Category</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                {issueCategories.map((category) => (
-                  <label key={category.id} className="cursor-pointer">
-                    <input
-                      type="radio"
-                      value={category.id}
-                      {...register('category', { required: 'Please select a category' })}
-                      className="sr-only"
-                    />
-                    <div className={`p-4 rounded-lg border-2 transition-all text-center hover:border-primary-300 ${
-                      watch('category') === category.id
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                        : 'border-gray-200 dark:border-gray-700'
-                    }`}>
-                      <div className="text-2xl mb-2">{category.icon}</div>
-                      <div className="font-medium text-sm">{category.name}</div>
-                      <div className="text-xs text-gray-500 mt-1">{category.description}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              {errors.category && (
-                <p className="mt-2 text-sm text-red-600">{errors.category.message as string}</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Location Input */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <MapPinIcon className="h-5 w-5" />
-                <span>Location</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex space-x-4">
-                <Button
-                  type="button"
-                  onClick={getCurrentLocation}
-                  variant={useCurrentLocation ? "default" : "outline"}
-                  className="flex items-center space-x-2"
-                >
-                  <MapPinIcon className="h-4 w-4" />
-                  <span>Use Current Location</span>
-                </Button>
-              </div>
-              
-              <Input
-                label="Address/Location Description"
-                {...register('address', { required: 'Location is required' })}
-                error={errors.address?.message as string}
-                placeholder="Enter the address or describe the location"
-              />
-              
-              <Input
-                label="Nearby Landmarks (Optional)"
-                {...register('landmarks')}
-                placeholder="e.g., Near Central Park, opposite to Mall"
-              />
-            </CardContent>
-          </Card>
-
-          {/* Issue Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Issue Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Input
-                label="Issue Title"
-                {...register('title', { required: 'Title is required', maxLength: { value: 100, message: 'Title must be less than 100 characters' } })}
-                error={errors.title?.message as string}
-                placeholder="Brief description of the issue"
-              />
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Description
-                </label>
-                <textarea
-                  {...register('description', { required: 'Description is required' })}
-                  rows={4}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
-                  placeholder="Provide detailed information about the issue..."
-                />
-                {errors.description && (
-                  <p className="mt-1 text-sm text-red-600">{errors.description.message as string}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Severity Level
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {severityLevels.map((level) => (
-                    <label key={level.id} className="cursor-pointer">
-                      <input
-                        type="radio"
-                        value={level.id}
-                        {...register('severity', { required: 'Please select severity' })}
-                        className="sr-only"
-                      />
-                      <div className={`p-3 rounded-lg border-2 text-center transition-all ${
-                        watch('severity') === level.id
-                          ? level.color + ' border-current'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}>
-                        <div className="font-medium">{level.name}</div>
+        <div className="grid gap-8 lg:grid-cols-12 mt-8">
+          {/* Left: form box (max half of the website) */}
+          <div className="lg:col-span-6">
+            <div className="rounded-2xl p-[1px] bg-gradient-to-br from-emerald-400/50 via-blue-400/40 to-cyan-400/50">
+              <Card className="rounded-2xl bg-white/70 dark:bg-gray-900/60 backdrop-blur ring-1 ring-gray-200/60 dark:ring-white/10">
+                <CardHeader className="p-6 pb-2">
+                  <CardTitle className="text-lg font-semibold">Submit your report</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 pt-4">
+                  <form onSubmit={onSubmit} className="space-y-6 max-w-2xl">
+                    {/* Issue Category */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                        Issue Category
+                      </label>
+                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {categories.map(({ name, icon: Icon }) => {
+                          const selected = category === name
+                          return (
+                            <button
+                              type="button"
+                              key={name}
+                              onClick={() => setCategory(name)}
+                              className={`group relative rounded-xl p-3 text-left ring-1 transition-all
+                                ${selected ? 'bg-emerald-50/70 dark:bg-emerald-900/20 ring-emerald-300' : 'bg-white/60 dark:bg-gray-900/40 ring-gray-200/60 dark:ring-white/10 hover:bg-white/80'}
+                              `}
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 ring-1 ring-white/20 shadow">
+                                  <Icon className="h-5 w-5 text-white" />
+                                </span>
+                                <span className="text-sm font-medium text-gray-900 dark:text-white">{name}</span>
+                              </div>
+                            </button>
+                          )
+                        })}
                       </div>
-                    </label>
-                  ))}
-                </div>
-                {errors.severity && (
-                  <p className="mt-1 text-sm text-red-600">{errors.severity.message as string}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Best Time to Contact
-                </label>
-                <Input
-                  type="time"
-                  {...register('contactTime')}
-                  placeholder="When officials can reach you"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Media Upload */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <PhotoIcon className="h-5 w-5" />
-                <span>Photos & Videos</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
-                <div className="text-center">
-                  <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="mt-4">
-                    <label htmlFor="file-upload" className="cursor-pointer">
-                      <span className="mt-2 block text-sm font-medium text-gray-900 dark:text-white">
-                        Upload photos or videos
-                      </span>
-                      <span className="mt-2 block text-sm text-gray-500">
-                        PNG, JPG, GIF up to 10MB (Max 5 files)
-                      </span>
-                    </label>
-                    <input
-                      id="file-upload"
-                      type="file"
-                      className="sr-only"
-                      multiple
-                      accept="image/*,video/*"
-                      onChange={handleImageUpload}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Image Previews */}
-              {previewUrls.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {previewUrls.map((url, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={url}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                      >
-                        ×
-                      </button>
+                      {category === 'Other' && (
+                        <input
+                          type="text"
+                          placeholder="Specify other issue"
+                          value={customCategory}
+                          onChange={(e) => setCustomCategory(e.target.value)}
+                          className="mt-3 w-full rounded-lg border border-gray-200/60 dark:border-white/10 bg-white/70 dark:bg-gray-900/60 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                        />
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Submit Section */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <Button
-                  type="submit"
-                  loading={isSubmitting}
-                  className="flex-1"
-                  variant="gradient"
-                >
-                  Submit Report
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.back()}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-              
-              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <ExclamationTriangleIcon className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div className="text-sm text-blue-800 dark:text-blue-200">
-                    <p className="font-medium">Before submitting:</p>
-                    <ul className="mt-1 list-disc list-inside space-y-1">
-                      <li>Ensure all information is accurate</li>
-                      <li>Photos should clearly show the issue</li>
-                      <li>You&apos;ll receive updates via notifications</li>
-                    </ul>
+                    {/* Photo Evidence */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                        Photo Evidence
+                      </label>
+                      <div className="mt-3 rounded-xl border border-dashed border-gray-300 dark:border-white/20 p-4 bg-white/50 dark:bg-gray-900/40">
+                        <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                          <PhotoIcon className="h-5 w-5" />
+                          <span>Upload photos or videos that clearly show the issue.</span>
+                        </div>
+                        <div className="mt-3 flex items-center gap-3">
+                          <input
+                            id="media"
+                            type="file"
+                            accept="image/*,video/*"
+                            multiple
+                            onChange={(e) => onSelectFiles(e.target.files)}
+                            className="block w-full text-sm file:mr-3 file:rounded-lg file:border file:border-gray-200/60 file:bg-white/80 file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-white"
+                          />
+                        </div>
+                        {media.length > 0 && (
+                          <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-3">
+                            {media.map((m) => (
+                              <div key={m.url} className="relative group rounded-lg overflow-hidden ring-1 ring-gray-200/60 dark:ring-white/10">
+                                {m.kind === 'image' ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={m.url} alt="preview" className="h-24 w-full object-cover" />
+                                ) : (
+                                  <video src={m.url} className="h-24 w-full object-cover" />
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => removeMedia(m.url)}
+                                  className="absolute top-1 right-1 rounded-full bg-white/80 dark:bg-gray-900/70 px-2 py-0.5 text-xs ring-1 ring-gray-200/60 dark:ring-white/10 hover:bg-white"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Location */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                        Location
+                      </label>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <Button type="button" onClick={useCurrentLocation} className="justify-center">
+                          <MapPinIcon className="h-4 w-4 mr-2" /> Use current location
+                        </Button>
+                        <input
+                          type="text"
+                          placeholder="Enter address or landmark"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          className="rounded-lg border border-gray-200/60 dark:border-white/10 bg-white/70 dark:bg-gray-900/60 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                        />
+                      </div>
+                      {(coords.lat && coords.lng) && (
+                        <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                          Coordinates: {coords.lat?.toFixed(5)}, {coords.lng?.toFixed(5)}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Issue Details */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                        Issue Details
+                      </label>
+                      <div className="mt-3 grid gap-3">
+                        <input
+                          type="text"
+                          placeholder="Issue title"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          className="rounded-lg border border-gray-200/60 dark:border-white/10 bg-white/70 dark:bg-gray-900/60 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                        />
+                        <textarea
+                          placeholder="Describe the issue in detail"
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          rows={4}
+                          className="rounded-lg border border-gray-200/60 dark:border-white/10 bg-white/70 dark:bg-gray-900/60 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Severity */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                        Severity Level
+                      </label>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(['Low', 'Medium', 'High', 'Critical'] as Severity[]).map((lvl) => (
+                          <button
+                            key={lvl}
+                            type="button"
+                            onClick={() => setSeverity(lvl)}
+                            className={`rounded-full px-3 py-1.5 text-sm ring-1 transition ${
+                              severity === lvl
+                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white ring-white/20'
+                                : 'bg-white/70 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 ring-gray-200/60 dark:ring-white/10 hover:bg-white'
+                            }`}
+                          >
+                            {lvl}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Confirmation */}
+                    <div className="flex items-start gap-3">
+                      <input
+                        id="confirm"
+                        type="checkbox"
+                        checked={confirmed}
+                        onChange={(e) => setConfirmed(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <label htmlFor="confirm" className="text-sm text-gray-700 dark:text-gray-300">
+                        I confirm that all details provided are true and genuine.
+                      </label>
+                    </div>
+
+                    <div className="pt-2">
+                      <Button type="submit" disabled={!canSubmit} className="w-full justify-center">
+                        {submitting ? 'Submitting…' : submitted ? 'Submitted ✅' : 'Submit Report'}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Right: Quick Guide + Live Preview */}
+          <div className="lg:col-span-6 space-y-6">
+            {/* Quick Guide */}
+            <div className="rounded-2xl p-[1px] bg-gradient-to-br from-fuchsia-400/50 via-purple-400/40 to-pink-400/50">
+              <Card className="rounded-2xl p-0 bg-white/70 dark:bg-gray-900/60 backdrop-blur ring-1 ring-gray-200/60 dark:ring-white/10">
+                <CardHeader className="px-6 pt-6">
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 ring-1 ring-white/20 shadow-md">
+                      <ClipboardDocumentCheckIcon className="h-4 w-4 text-white" />
+                    </span>
+                    <span>Quick Guide</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 pt-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                    Follow these steps to submit an effective report that gets results.
+                  </p>
+                  <div className="space-y-3">
+                    <div className="rounded-xl p-4 ring-1 ring-gray-200/60 dark:ring-white/10 bg-white/70 dark:bg-gray-900/50">
+                      <div className="font-medium text-gray-900 dark:text-white">1. Capture Evidence</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Upload clear photos or short videos. Include close-up and wide shots.</div>
+                    </div>
+                    <div className="rounded-xl p-4 ring-1 ring-gray-200/60 dark:ring-white/10 bg-white/70 dark:bg-gray-900/50">
+                      <div className="font-medium text-gray-900 dark:text-white">2. Describe & Categorize</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Pick the right category and write a concise, factual description.</div>
+                    </div>
+                    <div className="rounded-xl p-4 ring-1 ring-gray-200/60 dark:ring-white/10 bg-white/70 dark:bg-gray-900/50">
+                      <div className="font-medium text-gray-900 dark:text-white">3. Pin Accurate Location</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Use current location or add a landmark so teams can find it quickly.</div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </form>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Live Preview */}
+            <div className="rounded-2xl p-[1px] bg-gradient-to-br from-emerald-400/50 via-blue-400/40 to-cyan-400/50">
+              <Card className="rounded-2xl p-0 bg-white/70 dark:bg-gray-900/60 backdrop-blur ring-1 ring-gray-200/60 dark:ring-white/10">
+                <CardHeader className="px-6 pt-6">
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 ring-1 ring-white/20 shadow-md">
+                      <CheckCircleIcon className="h-4 w-4 text-white" />
+                    </span>
+                    <span>Report Preview</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 pt-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Category</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">{category === 'Other' && customCategory ? customCategory : category}</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Severity</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">{severity}</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Location</div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{address || '—'}</div>
+                        {(coords.lat && coords.lng) && (
+                          <div className="text-xs text-gray-600 dark:text-gray-400">{coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Title</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">{title || '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">Description</div>
+                      <div className="text-sm text-gray-900 dark:text-gray-200 whitespace-pre-wrap">{description || '—'}</div>
+                    </div>
+                    {media.length > 0 && (
+                      <div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300 mb-2">Attachments</div>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                          {media.map((m) => (
+                            <div key={m.url} className="relative rounded-lg overflow-hidden ring-1 ring-gray-200/60 dark:ring-white/10">
+                              {m.kind === 'image' ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={m.url} alt="attachment" className="h-24 w-full object-cover" />
+                              ) : (
+                                <video src={m.url} className="h-24 w-full object-cover" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
-    </DashboardLayout>
+    </>
   )
 }
