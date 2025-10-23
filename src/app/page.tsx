@@ -32,7 +32,7 @@ export default function LandingPage() {
         {/* Get Started Button */}
         <div className="mt-10 flex flex-col items-center gap-4">
           <Link
-            href="/login"
+            href="/signup"
             className="group relative inline-flex items-center justify-center rounded-full bg-green-600 px-10 py-6 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-[1.03] hover:bg-green-500 hover:shadow-green-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
           >
             <span className="relative z-10">Get Started</span>

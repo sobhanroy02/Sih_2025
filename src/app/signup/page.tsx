@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { UserIcon, ShieldCheckIcon, WrenchScrewdriverIcon, EyeIcon, EyeSlashIcon, ClockIcon, BoltIcon, BuildingLibraryIcon } from "@heroicons/react/24/outline";
+import { useAuthStore } from "@/store";
 
 type Role = "citizen" | "admin" | "worker";
 type Mode = "signup" | "login";
@@ -19,7 +20,8 @@ export default function AuthPage() {
   const [role, setRole] = useState<Role>("citizen");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { register, handleSubmit, reset, formState: { errors }, getValues } = useForm({ mode: "onChange" });
+  const { register, handleSubmit, reset, formState: { errors }, getValues, setValue } = useForm({ mode: "onChange" });
+  const { login } = useAuthStore();
 
   // Reset fields when mode or role changes
   useEffect(() => { reset(); }, [mode, role, reset]);
@@ -30,10 +32,40 @@ export default function AuthPage() {
   }, [router]);
 
   const onSubmit = async (data: Record<string, unknown>) => {
-    console.log("Form submit", mode, role, data);
-    // TODO: integrate API; for now, redirect citizen to dashboard on signup
-    if (mode === "signup" && role === "citizen") {
-      router.replace("/dashboard");
+    // For this demo, persist profile details into the auth store so Profile reflects the sign-up
+    if (mode === "signup") {
+      const d = data as any;
+      const id = (globalThis.crypto?.randomUUID?.() as string | undefined) || `u_${Date.now()}`;
+      const newUser = {
+        id,
+        email: String(d.email || ""),
+        name: String(d.fullName || ""),
+        role: role as "citizen" | "admin" | "worker",
+        municipality: d.municipality ? String(d.municipality) : undefined,
+        city: d.city ? String(d.city) : undefined,
+        ward: d.ward ? String(d.ward) : undefined,
+        department: d.department ? String(d.department) : undefined,
+        avatar: d.avatar ? String(d.avatar) : undefined,
+        verified: false,
+        phone: d.phone ? String(d.phone) : undefined,
+      };
+      login(newUser);
+      router.replace("/profile");
+      return;
+    }
+
+    // Basic demo login: create a minimal user and go to profile
+    if (mode === "login") {
+      const d = data as any;
+      const id = (globalThis.crypto?.randomUUID?.() as string | undefined) || `u_${Date.now()}`;
+      login({
+        id,
+        email: String(d.identifier || "user@example.com"),
+        name: "User",
+        role: role as "citizen" | "admin" | "worker",
+        verified: false,
+      } as any);
+      router.replace("/profile");
     }
   };
 
@@ -227,6 +259,7 @@ export default function AuthPage() {
                   showConfirmPassword={showConfirmPassword} 
                   setShowConfirmPassword={setShowConfirmPassword} 
                   getValues={getValues}
+                  setValue={setValue}
                 />
               ) : (
                 <LoginFields role={role} register={register} errors={errors} showPassword={showPassword} setShowPassword={setShowPassword} />
@@ -366,6 +399,7 @@ interface SignupFieldsProps {
   showConfirmPassword: boolean;
   setShowConfirmPassword: (v: boolean) => void;
   getValues: ReturnType<typeof useForm>["getValues"];
+  setValue: ReturnType<typeof useForm>["setValue"];
 }
 
 function LabelStar({ text }: { text: string }) {
@@ -377,13 +411,20 @@ function FieldError({ name, errors }: { name: string; errors: Record<string, any
   return <p className="mt-1 text-xs font-medium text-red-600">{String(errors[name].message || 'Required')}</p>;
 }
 
-function SignupFields({ role, register, errors, showPassword, setShowPassword, showConfirmPassword, setShowConfirmPassword, getValues }: SignupFieldsProps) {
+function SignupFields({ role, register, errors, showPassword, setShowPassword, showConfirmPassword, setShowConfirmPassword, getValues, setValue }: SignupFieldsProps) {
   const [avatarPreview, setAvatarPreview] = React.useState<string | null>(null);
   const onAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setAvatarPreview(url);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || "");
+        setAvatarPreview(dataUrl);
+        try {
+          setValue("avatar", dataUrl, { shouldDirty: true, shouldValidate: false });
+        } catch {}
+      };
+      reader.readAsDataURL(file);
     }
   };
   return (
@@ -419,6 +460,8 @@ function SignupFields({ role, register, errors, showPassword, setShowPassword, s
               )}
             </div>
           </div>
+          {/* hidden field to register avatar in form state */}
+          <input type="hidden" {...register("avatar")} />
           {role === "admin" && <Input label={<LabelStar text="Admin ID" />} placeholder="Admin ID" {...register("adminId", { required: "Admin ID required" })} />}
           {role === "worker" && <Input label={<LabelStar text="Worker ID" />} placeholder="Worker ID" {...register("workerId", { required: "Worker ID required" })} />}
           {role === "worker" && (

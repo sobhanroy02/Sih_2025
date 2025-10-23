@@ -3,13 +3,12 @@ import withPWA from 'next-pwa'
 // NOTE: Avoid strict typing with NextConfig here due to mismatch between next and @types/next-pwa bundled Next types.
 // If needed, refine with Partial<...> or upgrade next-pwa types.
 const nextConfig = {
-  experimental: {
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
+  // Updated per Next.js 15 deprecation: move from experimental.turbo to turbopack
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
   },
@@ -20,6 +19,8 @@ const nextConfig = {
 }
 
 const pwaConfig = withPWA({
+  // Avoid service worker registration during development to prevent caching surprises
+  disable: process.env.NODE_ENV === 'development',
   dest: 'public',
   register: true,
   skipWaiting: true,

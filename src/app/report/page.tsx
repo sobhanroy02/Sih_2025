@@ -1,6 +1,6 @@
-'use client'
+"use client"
 
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import CitizenNavbar from '@/components/layout/CitizenNavbar'
@@ -42,6 +42,8 @@ export default function ReportPage() {
   const [confirmed, setConfirmed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const photoCaptureRef = useRef<HTMLInputElement | null>(null)
+  const videoCaptureRef = useRef<HTMLInputElement | null>(null)
 
   const categories = useMemo(
     () => [
@@ -82,6 +84,12 @@ export default function ReportPage() {
 
   function removeMedia(url: string) {
     setMedia((prev) => prev.filter((m) => m.url !== url))
+  }
+
+  function onCaptureChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onSelectFiles(e.target.files)
+    // reset to allow selecting the same file again
+    try { if (e.target) (e.target as HTMLInputElement).value = '' } catch {}
   }
 
   const canSubmit =
@@ -186,7 +194,7 @@ export default function ReportPage() {
                           <PhotoIcon className="h-5 w-5" />
                           <span>Upload photos or videos that clearly show the issue.</span>
                         </div>
-                        <div className="mt-3 flex items-center gap-3">
+                        <div className="mt-3 flex flex-wrap items-center gap-3">
                           <input
                             id="media"
                             type="file"
@@ -194,6 +202,42 @@ export default function ReportPage() {
                             multiple
                             onChange={(e) => onSelectFiles(e.target.files)}
                             className="block w-full text-sm file:mr-3 file:rounded-lg file:border file:border-gray-200/60 file:bg-white/80 file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-white"
+                          />
+                          <span className="text-xs text-gray-500">or</span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => photoCaptureRef.current?.click()}
+                            leftIcon={<PhotoIcon className="h-4 w-4" />}
+                          >
+                            Take Photo
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => videoCaptureRef.current?.click()}
+                            leftIcon={<FilmIcon className="h-4 w-4" />}
+                          >
+                            Record Video
+                          </Button>
+                          {/* Hidden capture inputs for mobile cameras */}
+                          <input
+                            ref={photoCaptureRef}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={onCaptureChange}
+                            hidden
+                          />
+                          <input
+                            ref={videoCaptureRef}
+                            type="file"
+                            accept="video/*"
+                            capture
+                            onChange={onCaptureChange}
+                            hidden
                           />
                         </div>
                         {media.length > 0 && (
@@ -313,9 +357,14 @@ export default function ReportPage() {
                     <div className="pt-2">
                       <Button
                         type="submit"
-                        disabled={!canSubmit}
-                        variant="ghost"
-                        className="w-full justify-center !bg-primary-700 !text-white !hover:bg-primary-800 !focus-visible:ring-primary-600 disabled:opacity-100 disabled:!bg-primary-700 disabled:!text-white"
+                        variant="default"
+                        size="xl"
+                        className={`w-full justify-center rounded-full bg-blue-600 text-white shadow-[0_10px_24px_-6px_rgba(37,99,235,0.55)] ring-1 ring-blue-300/50 transition-transform hover:bg-blue-700 hover:shadow-[0_14px_32px_-6px_rgba(37,99,235,0.6)] hover:scale-[1.01] active:scale-[0.99] ${
+                          canSubmit ? 'animate-pulse' : ''
+                        }`}
+                        leftIcon={<ClipboardDocumentCheckIcon className="h-5 w-5" />}
+                        aria-label={submitting ? 'Submitting report' : submitted ? 'Report submitted' : 'Submit report'}
+                        title={submitting ? 'Submitting report' : submitted ? 'Report submitted' : 'Submit report'}
                       >
                         {submitting ? 'Submitting…' : submitted ? 'Submitted ✅' : 'Submit Report'}
                       </Button>

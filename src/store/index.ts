@@ -200,6 +200,133 @@ export const useIssuesStore = create<IssuesState>()(
           upvotes: 5,
           comments: []
         }
+        ,
+        {
+          id: '6',
+          title: 'Damaged pedestrian crossing near City Hall',
+          description: 'The zebra crossing paint has faded and the curb ramp is cracked, making it unsafe for pedestrians and wheelchairs.',
+          category: 'road',
+          priority: 'medium',
+          status: 'open',
+          location: {
+            address: 'City Hall, 1st Ave Entrance',
+            coordinates: { lat: 40.7138, lng: -74.0065 }
+          },
+          images: [],
+          reportedBy: 'user6',
+          reportedAt: new Date('2024-01-18T09:10:00'),
+          updatedAt: new Date('2024-01-18T09:10:00'),
+          upvotes: 11,
+          comments: []
+        },
+        {
+          id: '7',
+          title: 'Overflowing drain near Riverside Park',
+          description: 'Storm drain is clogged with leaves causing water to pool and flow onto the sidewalk after rain.',
+          category: 'water',
+          priority: 'medium',
+          status: 'in-progress',
+          location: {
+            address: 'Riverside Park, W 79th St',
+            coordinates: { lat: 40.7870, lng: -73.9847 }
+          },
+          images: [],
+          reportedBy: 'user7',
+          reportedAt: new Date('2024-01-17T12:25:00'),
+          updatedAt: new Date('2024-01-18T08:00:00'),
+          upvotes: 9,
+          comments: []
+        },
+        {
+          id: '8',
+          title: 'Streetlight flickering on Pine & 5th',
+          description: 'The corner streetlight flickers continuously at night, reducing visibility for drivers and pedestrians.',
+          category: 'streetlight',
+          priority: 'low',
+          status: 'open',
+          location: {
+            address: 'Pine Ave & 5th Street',
+            coordinates: { lat: 40.7482, lng: -73.9815 }
+          },
+          images: [],
+          reportedBy: 'user8',
+          reportedAt: new Date('2024-01-19T21:05:00'),
+          updatedAt: new Date('2024-01-19T21:05:00'),
+          upvotes: 4,
+          comments: []
+        },
+        {
+          id: '9',
+          title: 'Illegal dumping near warehouse lane',
+          description: 'Piles of construction debris and broken furniture dumped along the lane; attracting pests.',
+          category: 'garbage',
+          priority: 'high',
+          status: 'open',
+          location: {
+            address: 'Warehouse Lane, East Industrial Area',
+            coordinates: { lat: 40.7261, lng: -74.0112 }
+          },
+          images: [],
+          reportedBy: 'user9',
+          reportedAt: new Date('2024-01-20T07:40:00'),
+          updatedAt: new Date('2024-01-20T07:40:00'),
+          upvotes: 18,
+          comments: []
+        },
+        {
+          id: '10',
+          title: 'Broken bench and sharp edges in park',
+          description: 'A public bench has splintered wood and exposed nails posing a hazard to children.',
+          category: 'other',
+          priority: 'medium',
+          status: 'in-progress',
+          location: {
+            address: 'Maple Park, Playground Area',
+            coordinates: { lat: 40.7681, lng: -73.9740 }
+          },
+          images: [],
+          reportedBy: 'user10',
+          reportedAt: new Date('2024-01-18T15:55:00'),
+          updatedAt: new Date('2024-01-19T10:10:00'),
+          upvotes: 7,
+          comments: []
+        },
+        {
+          id: '11',
+          title: 'Potholes along bus route on Cedar St',
+          description: 'Multiple potholes forming a cluster causing buses to swerve; immediate attention suggested.',
+          category: 'pothole',
+          priority: 'critical',
+          status: 'open',
+          location: {
+            address: 'Cedar Street, near stop B12',
+            coordinates: { lat: 40.7423, lng: -74.0022 }
+          },
+          images: [],
+          reportedBy: 'user11',
+          reportedAt: new Date('2024-01-21T06:30:00'),
+          updatedAt: new Date('2024-01-21T06:30:00'),
+          upvotes: 26,
+          comments: []
+        },
+        {
+          id: '12',
+          title: 'Water seepage in underpass',
+          description: 'Persistent water seepage causing slippery floor and algae growth; needs drainage fix.',
+          category: 'water',
+          priority: 'high',
+          status: 'in-progress',
+          location: {
+            address: 'Central Underpass, Midtown',
+            coordinates: { lat: 40.7542, lng: -73.9903 }
+          },
+          images: [],
+          reportedBy: 'user12',
+          reportedAt: new Date('2024-01-22T11:20:00'),
+          updatedAt: new Date('2024-01-22T14:00:00'),
+          upvotes: 13,
+          comments: []
+        }
       ],
       selectedIssue: null,
       filters: {
