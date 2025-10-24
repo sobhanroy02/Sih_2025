@@ -50,7 +50,11 @@ export default function AuthPage() {
         phone: d.phone ? String(d.phone) : undefined,
       };
       login(newUser);
-      router.replace("/profile");
+      if (newUser.role === "admin") {
+        router.replace("/overview");
+      } else {
+        router.replace("/profile");
+      }
       return;
     }
 
@@ -58,14 +62,19 @@ export default function AuthPage() {
     if (mode === "login") {
       const d = data as any;
       const id = (globalThis.crypto?.randomUUID?.() as string | undefined) || `u_${Date.now()}`;
-      login({
+      const newUser = {
         id,
         email: String(d.identifier || "user@example.com"),
         name: "User",
         role: role as "citizen" | "admin" | "worker",
         verified: false,
-      } as any);
-      router.replace("/profile");
+      } as any;
+      login(newUser);
+      if (newUser.role === "admin") {
+        router.replace("/overview");
+      } else {
+        router.replace("/profile");
+      }
     }
   };
 

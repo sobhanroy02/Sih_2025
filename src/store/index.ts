@@ -118,8 +118,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'high',
           status: 'open',
           location: {
-            address: 'Main Street & Oak Avenue, Downtown',
-            coordinates: { lat: 40.7128, lng: -74.0060 }
+            address: 'Esplanade, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.5726, lng: 88.3639 }
           },
           images: [],
           reportedBy: 'user1',
@@ -136,8 +136,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'medium',
           status: 'in-progress',
           location: {
-            address: 'Elm Street, Residential District',
-            coordinates: { lat: 40.7589, lng: -73.9851 }
+            address: 'Howrah Maidan, Howrah, West Bengal, India',
+            coordinates: { lat: 22.5892, lng: 88.3419 }
           },
           images: [],
           reportedBy: 'user2',
@@ -154,8 +154,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'medium',
           status: 'resolved',
           location: {
-            address: 'Central Park Main Entrance',
-            coordinates: { lat: 40.7829, lng: -73.9654 }
+            address: 'Eco Park Main Gate, New Town, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.6207, lng: 88.465 }
           },
           images: [],
           reportedBy: 'user3',
@@ -172,8 +172,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'critical',
           status: 'in-progress',
           location: {
-            address: 'Pine Avenue, near house #245',
-            coordinates: { lat: 40.7505, lng: -73.9934 }
+            address: 'EM Bypass near Ruby General Hospital, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.5145, lng: 88.3995 }
           },
           images: [],
           reportedBy: 'user4',
@@ -190,8 +190,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'low',
           status: 'open',
           location: {
-            address: 'Public Library, West Side Wall',
-            coordinates: { lat: 40.7614, lng: -73.9776 }
+            address: 'Park Street, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.5522, lng: 88.3528 }
           },
           images: [],
           reportedBy: 'user5',
@@ -209,8 +209,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'medium',
           status: 'open',
           location: {
-            address: 'City Hall, 1st Ave Entrance',
-            coordinates: { lat: 40.7138, lng: -74.0065 }
+            address: 'KMC HQ, S.N. Banerjee Rd, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.5677, lng: 88.351 }
           },
           images: [],
           reportedBy: 'user6',
@@ -227,8 +227,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'medium',
           status: 'in-progress',
           location: {
-            address: 'Riverside Park, W 79th St',
-            coordinates: { lat: 40.7870, lng: -73.9847 }
+            address: 'Prinsep Ghat Riverside, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.5482, lng: 88.335 }
           },
           images: [],
           reportedBy: 'user7',
@@ -245,8 +245,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'low',
           status: 'open',
           location: {
-            address: 'Pine Ave & 5th Street',
-            coordinates: { lat: 40.7482, lng: -73.9815 }
+            address: 'Salt Lake Sector V, Ring Road Crossing, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.5793, lng: 88.431 }
           },
           images: [],
           reportedBy: 'user8',
@@ -263,8 +263,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'high',
           status: 'open',
           location: {
-            address: 'Warehouse Lane, East Industrial Area',
-            coordinates: { lat: 40.7261, lng: -74.0112 }
+            address: 'Topsia Industrial Estate, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.544, lng: 88.393 }
           },
           images: [],
           reportedBy: 'user9',
@@ -281,8 +281,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'medium',
           status: 'in-progress',
           location: {
-            address: 'Maple Park, Playground Area',
-            coordinates: { lat: 40.7681, lng: -73.9740 }
+            address: 'Rabindra Sadan Park, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.5395, lng: 88.3527 }
           },
           images: [],
           reportedBy: 'user10',
@@ -299,8 +299,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'critical',
           status: 'open',
           location: {
-            address: 'Cedar Street, near stop B12',
-            coordinates: { lat: 40.7423, lng: -74.0022 }
+            address: 'BT Road near Dunlop, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.655, lng: 88.373 }
           },
           images: [],
           reportedBy: 'user11',
@@ -317,8 +317,8 @@ export const useIssuesStore = create<IssuesState>()(
           priority: 'high',
           status: 'in-progress',
           location: {
-            address: 'Central Underpass, Midtown',
-            coordinates: { lat: 40.7542, lng: -73.9903 }
+            address: 'Sealdah Underpass, Kolkata, West Bengal, India',
+            coordinates: { lat: 22.5621, lng: 88.3686 }
           },
           images: [],
           reportedBy: 'user12',
@@ -366,7 +366,7 @@ export const useIssuesStore = create<IssuesState>()(
         })),
     }),
     {
-      name: 'issues-storage',
+      name: 'issues-storage-v2',
       storage: createJSONStorage(() => localStorage),
     }
   )
