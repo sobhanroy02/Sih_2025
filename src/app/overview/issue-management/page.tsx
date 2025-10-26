@@ -1,9 +1,10 @@
-"use client";
+ "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useIssuesStore } from "@/store";
+import { useSearchParams } from "next/navigation";
 
 type Dept = "Roads" | "Lighting" | "Sanitation" | "Water" | "Parks" | "General";
 
@@ -28,8 +29,10 @@ function mapCategoryToDept(cat: string): Dept {
 export default function Page() {
   const { issues, updateIssue } = useIssuesStore();
 
+  const searchParams = useSearchParams();
+  const initialDept = (searchParams?.get("dept") as Dept | null) || "";
   const [status, setStatus] = useState<string>("");
-  const [dept, setDept] = useState<string>("");
+  const [dept, setDept] = useState<string>(initialDept);
   const [sort, setSort] = useState<"reportedAt" | "updatedAt">("reportedAt");
 
   const filtered = useMemo(() => {
@@ -39,6 +42,14 @@ export default function Page() {
     list.sort((a: any, b: any) => new Date(b[sort]).getTime() - new Date(a[sort]).getTime());
     return list;
   }, [issues, status, dept, sort]);
+
+  // Modal state for View action
+  const [selectedIssue, setSelectedIssue] = useState<any | null>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedIssue(null); };
+    if (selectedIssue) window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedIssue]);
 
   const statuses: Array<{ v: string; label: string; color: string }> = [
     { v: "open", label: "Open", color: "bg-amber-100 text-amber-800 ring-amber-200" },
@@ -179,7 +190,7 @@ export default function Page() {
                       </td>
                       <td className="px-4 py-3 align-top">
                         <div className="flex flex-wrap gap-2">
-                          <Link href={`/issue/${i.id}`} className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-emerald-400 hover:text-emerald-700">View</Link>
+                          <button onClick={()=>setSelectedIssue(i)} className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-emerald-400 hover:text-emerald-700">View</button>
                           <button onClick={()=>assignIssue(i.id)} className="inline-flex items-center rounded-lg border border-sky-300 bg-white px-2.5 py-1.5 text-xs font-medium text-sky-700 shadow-sm transition hover:bg-sky-50">Assign</button>
                           <button onClick={()=>resolveIssue(i.id)} className="inline-flex items-center rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100">Resolve</button>
                         </div>
@@ -291,6 +302,9 @@ export default function Page() {
           </div>
         </div>
       </main>
+      {selectedIssue && (
+        <IssueModal issue={selectedIssue} onClose={() => setSelectedIssue(null)} />
+      )}
     </div>
   );
 }
@@ -331,6 +345,135 @@ function Donut({ data }: { data: [string, number][] }) {
         </g>
         <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" className="fill-slate-800" style={{ fontSize: 14, fontWeight: 700 }}>{total}</text>
       </svg>
+    </div>
+  );
+}
+
+function Badge({ children, color }: { children: React.ReactNode; color: 'amber'|'sky'|'emerald'|'slate'|'rose' }){
+  const map: Record<string, string> = {
+    amber: 'bg-amber-100 text-amber-800 ring-amber-200',
+    sky: 'bg-sky-100 text-sky-800 ring-sky-200',
+    emerald: 'bg-emerald-100 text-emerald-800 ring-emerald-200',
+    slate: 'bg-slate-100 text-slate-800 ring-slate-200',
+    rose: 'bg-rose-100 text-rose-800 ring-rose-200',
+  };
+  return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${map[color]}`}>{children}</span>;
+}
+
+function IssueModal({ issue, onClose }: { issue: any; onClose: () => void }){
+  const statusColor = issue.status === 'open' ? 'amber' : issue.status === 'in-progress' ? 'sky' : issue.status === 'resolved' ? 'emerald' : 'slate';
+  const priorityColor = (issue.priority === 'high' || issue.priority === 'critical') ? 'rose' : issue.priority === 'medium' ? 'amber' : 'emerald';
+  const gallery: string[] = (() => {
+    // Use user images if provided; otherwise category-specific demo images
+    if (issue.images && issue.images.length > 0) return issue.images;
+    const map: Record<string, string[]> = {
+      pothole: [
+        'https://images.unsplash.com/photo-1616031033161-af184f12e3c6?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1597019557821-31c07336c169?q=80&w=1200&auto=format&fit=crop',
+      ],
+      road: [
+        'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?q=80&w=1200&auto=format&fit=crop',
+      ],
+      streetlight: [
+        'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1483118714900-540cf339fd68?q=80&w=1200&auto=format&fit=crop',
+      ],
+      garbage: [
+        'https://images.unsplash.com/photo-1596568356874-21fca27d2a5e?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1558449033-7ea4a4b34f88?q=80&w=1200&auto=format&fit=crop',
+      ],
+      water: [
+        'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1514908326050-4f7b2d2f2b58?q=80&w=1200&auto=format&fit=crop',
+      ],
+      graffiti: [
+        'https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1200&auto=format&fit=crop',
+      ],
+      other: [
+        'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1200&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?q=80&w=1200&auto=format&fit=crop',
+      ],
+    };
+    const key = (issue.category || 'other') as keyof typeof map;
+    return map[key] || map.other;
+  })();
+  const fields: Array<{ label: string; value: React.ReactNode }> = [
+    { label: 'Report ID', value: <code className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-700 ring-1 ring-slate-200">{issue.id}</code> },
+    { label: 'Category', value: issue.category },
+    { label: 'Department', value: mapCategoryToDept(issue.category) },
+    { label: 'Status', value: <Badge color={statusColor as any}>{issue.status}</Badge> },
+    { label: 'Priority', value: <Badge color={priorityColor as any}>{issue.priority}</Badge> },
+    { label: 'Address', value: issue.location?.address || '-' },
+    { label: 'Coordinates', value: issue.location?.coordinates ? `${issue.location.coordinates.lat}, ${issue.location.coordinates.lng}` : '-' },
+    { label: 'Assigned To', value: issue.assignedTo || '-' },
+    { label: 'Reported At', value: new Date(issue.reportedAt).toLocaleString() },
+    { label: 'Updated At', value: new Date(issue.updatedAt).toLocaleString() },
+    { label: 'Upvotes', value: String(issue.upvotes ?? 0) },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+      <div className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200">
+        {/* Header with badges aligned */}
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-6 py-4">
+          <div className="min-w-0">
+            <h3 className="truncate text-lg font-semibold text-slate-900">{issue.title}</h3>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+              <Badge color={statusColor as any}>{issue.status}</Badge>
+              <Badge color={priorityColor as any}>{issue.priority}</Badge>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] ring-1 ring-slate-200">{mapCategoryToDept(issue.category)}</span>
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-700 ring-1 ring-slate-200">{issue.id}</code>
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">Close</button>
+        </div>
+
+        {/* Body */}
+        <div className="grid grid-cols-1 lg:grid-cols-2">
+          {/* Left: details */}
+          <div className="max-h-[68vh] space-y-5 overflow-auto p-6">
+            <div>
+              <h4 className="text-sm font-semibold text-slate-800">Description</h4>
+              <p className="mt-1 text-sm leading-relaxed text-slate-700">{issue.description || 'No description provided.'}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-slate-800">Details</h4>
+              <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                {fields.map(f => (
+                  <div key={String(f.label)} className="grid grid-cols-[120px_1fr] items-start gap-2">
+                    <dt className="truncate text-slate-500">{f.label}</dt>
+                    <dd className="text-slate-800 break-words">{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+
+          {/* Right: gallery with a featured image */}
+          <div className="border-t border-slate-200 p-6 lg:border-l lg:border-t-0">
+            <h4 className="text-sm font-semibold text-slate-800">Attachments</h4>
+            {gallery.length > 0 ? (
+              <div className="mt-3 grid grid-cols-3 gap-3">
+                {/* Featured large tile */}
+                <figure className="relative col-span-3 aspect-[16/9] overflow-hidden rounded-xl ring-1 ring-slate-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={gallery[0]} alt="Attachment 1" className="h-full w-full object-cover" />
+                </figure>
+                {gallery.slice(1,7).map((src: string, idx: number) => (
+                  <figure key={idx} className="relative aspect-[4/3] overflow-hidden rounded-lg ring-1 ring-slate-200">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={src} alt={`Attachment ${idx+2}`} className="h-full w-full object-cover" />
+                  </figure>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-slate-600">No images for this report.</p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

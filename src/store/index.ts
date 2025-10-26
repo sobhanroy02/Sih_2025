@@ -86,6 +86,20 @@ export const useAuthStore = create<AuthState>()(
   )
 )
 
+// --- Helpers ---
+const REPORT_ID_REGEX = /^[A-Z0-9]{12}$/;
+function genReportId(): string {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  const len = 12
+  try {
+    const bytes = new Uint32Array(len)
+    globalThis.crypto?.getRandomValues?.(bytes)
+    return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('')
+  } catch {
+    return Array.from({ length: len }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('')
+  }
+}
+
 // Issues Store
 interface IssuesState {
   issues: Issue[]
@@ -111,7 +125,7 @@ export const useIssuesStore = create<IssuesState>()(
     (set) => ({
       issues: [
         {
-          id: '1',
+          id: 'WBGH8K2M9Q1Z',
           title: 'Large pothole on Main Street',
           description: 'There\'s a dangerous pothole near the intersection of Main Street and Oak Avenue. It\'s about 2 feet wide and quite deep, causing damage to vehicles.',
           category: 'pothole',
@@ -129,7 +143,7 @@ export const useIssuesStore = create<IssuesState>()(
           comments: []
         },
         {
-          id: '2',
+          id: 'WBCN7P4D6T8A',
           title: 'Broken street light on Elm Street',
           description: 'The street light on Elm Street has been out for over a week, making the area unsafe for pedestrians at night.',
           category: 'streetlight',
@@ -147,7 +161,7 @@ export const useIssuesStore = create<IssuesState>()(
           comments: []
         },
         {
-          id: '3',
+          id: 'WBECO6L5A1R3',
           title: 'Overflowing garbage bins at Central Park',
           description: 'Multiple garbage bins near the main entrance of Central Park are overflowing, attracting pests and creating an unsanitary environment.',
           category: 'garbage',
@@ -165,7 +179,7 @@ export const useIssuesStore = create<IssuesState>()(
           comments: []
         },
         {
-          id: '4',
+          id: 'WBRBY2Y9H4K5',
           title: 'Water leak on Pine Avenue',
           description: 'There\'s a significant water leak coming from an underground pipe on Pine Avenue. Water is pooling on the street and sidewalk.',
           category: 'water',
@@ -183,7 +197,7 @@ export const useIssuesStore = create<IssuesState>()(
           comments: []
         },
         {
-          id: '5',
+          id: 'WBPST7U3C8N2',
           title: 'Graffiti on library building',
           description: 'New graffiti has appeared on the side wall of the public library building, affecting the building\'s appearance.',
           category: 'graffiti',
@@ -202,7 +216,7 @@ export const useIssuesStore = create<IssuesState>()(
         }
         ,
         {
-          id: '6',
+          id: 'WBKMC1Q8E5V7',
           title: 'Damaged pedestrian crossing near City Hall',
           description: 'The zebra crossing paint has faded and the curb ramp is cracked, making it unsafe for pedestrians and wheelchairs.',
           category: 'road',
@@ -220,7 +234,7 @@ export const useIssuesStore = create<IssuesState>()(
           comments: []
         },
         {
-          id: '7',
+          id: 'WBPGR2S9B6L1',
           title: 'Overflowing drain near Riverside Park',
           description: 'Storm drain is clogged with leaves causing water to pool and flow onto the sidewalk after rain.',
           category: 'water',
@@ -238,7 +252,7 @@ export const useIssuesStore = create<IssuesState>()(
           comments: []
         },
         {
-          id: '8',
+          id: 'WBSLT4V7N2M5',
           title: 'Streetlight flickering on Pine & 5th',
           description: 'The corner streetlight flickers continuously at night, reducing visibility for drivers and pedestrians.',
           category: 'streetlight',
@@ -256,7 +270,7 @@ export const useIssuesStore = create<IssuesState>()(
           comments: []
         },
         {
-          id: '9',
+          id: 'WBTPS3I6D9E0',
           title: 'Illegal dumping near warehouse lane',
           description: 'Piles of construction debris and broken furniture dumped along the lane; attracting pests.',
           category: 'garbage',
@@ -274,7 +288,7 @@ export const useIssuesStore = create<IssuesState>()(
           comments: []
         },
         {
-          id: '10',
+          id: 'WBRSD5P1J7Q8',
           title: 'Broken bench and sharp edges in park',
           description: 'A public bench has splintered wood and exposed nails posing a hazard to children.',
           category: 'other',
@@ -292,7 +306,7 @@ export const useIssuesStore = create<IssuesState>()(
           comments: []
         },
         {
-          id: '11',
+          id: 'WBBTR6G2F8H4',
           title: 'Potholes along bus route on Cedar St',
           description: 'Multiple potholes forming a cluster causing buses to swerve; immediate attention suggested.',
           category: 'pothole',
@@ -310,7 +324,7 @@ export const useIssuesStore = create<IssuesState>()(
           comments: []
         },
         {
-          id: '12',
+          id: 'WBSDL9C3K1M7',
           title: 'Water seepage in underpass',
           description: 'Persistent water seepage causing slippery floor and algae growth; needs drainage fix.',
           category: 'water',
@@ -334,7 +348,13 @@ export const useIssuesStore = create<IssuesState>()(
         searchQuery: '',
       },
       addIssue: (issue) =>
-        set((state) => ({ issues: [issue, ...state.issues] })),
+        set((state) => {
+          let next: Issue = issue as Issue
+          if (!next.id || !REPORT_ID_REGEX.test(next.id)) {
+            next = { ...next, id: genReportId() }
+          }
+          return { issues: [next, ...state.issues] }
+        }),
       updateIssue: (id, updates) =>
         set((state) => ({
           issues: state.issues.map((issue) =>
@@ -366,7 +386,7 @@ export const useIssuesStore = create<IssuesState>()(
         })),
     }),
     {
-      name: 'issues-storage-v2',
+      name: 'issues-storage-v3',
       storage: createJSONStorage(() => localStorage),
     }
   )
