@@ -1,8 +1,6 @@
 "use client"
 
 import React, { useMemo, useRef, useState } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
 import CitizenNavbar from '@/components/layout/CitizenNavbar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -103,11 +101,76 @@ export default function ReportPage() {
     e.preventDefault()
     if (!canSubmit) return
     setSubmitting(true)
-    // Simulate submit
-    setTimeout(() => {
+
+    try {
+      // Upload files if any
+      const attachments: unknown[] = []
+      
+      for (const mediaItem of media) {
+        try {
+          const formData = new FormData()
+          formData.append('file', mediaItem.file)
+          
+          const uploadRes = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          })
+          
+          const uploadData = await uploadRes.json()
+          
+          if (uploadRes.ok && uploadData.file) {
+            attachments.push({
+              file_url: uploadData.file.url,
+              file_type: mediaItem.kind,
+              file_size: mediaItem.file.size,
+              metadata: {
+                originalName: mediaItem.file.name
+              }
+            })
+          }
+        } catch (err) {
+          console.error('Error uploading file:', err)
+        }
+      }
+
+      // Create the issue
+      const issueData = {
+        title: title.trim(),
+        description: description.trim(),
+        category: category === 'Other' ? customCategory : category,
+        priority: severity.toLowerCase(),
+        location: coords.lat && coords.lng ? 
+          { latitude: coords.lat, longitude: coords.lng } : 
+          null,
+        address: address.trim() || 'Location based on coordinates',
+        attachments: attachments.length > 0 ? attachments : undefined
+      }
+
+      const response = await fetch('/api/issues', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(issueData)
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setSubmitted(true)
+        // Reset form
+        setTimeout(() => {
+          window.location.href = `/issue/${result.issue.id}`
+        }, 1500)
+      } else {
+        alert(`Error: ${result.error || 'Failed to submit report'}`)
+      }
+    } catch (error) {
+      console.error('Error submitting report:', error)
+      alert('Error submitting report. Please try again.')
+    } finally {
       setSubmitting(false)
-      setSubmitted(true)
-    }, 1000)
+    }
   }
 
   return (
