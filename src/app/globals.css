@@ -30,7 +30,7 @@
   --sidebar-width-collapsed: 4rem;
 }
 
-.dark {
+.dark, [data-theme="dark"] {
   /* Dark theme colors */
   --background: 15 23 42; /* gray-900 */
   --foreground: 248 250 252; /* gray-50 */
@@ -62,7 +62,52 @@ body {
   background-color: rgb(var(--background));
   color: rgb(var(--foreground));
   font-feature-settings: "rlig" 1, "calt" 1;
+  color-scheme: light dark;
 }
+
+/* Ensure text remains readable across themes for common elements */
+button,
+input,
+select,
+textarea {
+  color: rgb(var(--foreground));
+}
+
+/* Inputs and textareas: inherit color and caret for visibility */
+input,
+textarea,
+select {
+  background-color: transparent; /* component classes handle bg; keep transparent to see page theme */
+  caret-color: currentColor;
+}
+
+/* Placeholders with proper contrast in both themes */
+input::placeholder,
+textarea::placeholder {
+  color: rgb(var(--muted-foreground));
+  opacity: 1;
+}
+/* Legacy placeholder selectors */
+input::-ms-input-placeholder,
+textarea::-ms-input-placeholder {
+  color: rgb(var(--muted-foreground));
+}
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: rgb(var(--muted-foreground));
+}
+
+/* Links default to foreground unless overridden */
+a { color: rgb(var(--foreground)); }
+a:hover { opacity: 0.9; }
+
+/* Surfaces follow variables so cards/popovers remain legible */
+.surface-card { background-color: rgb(var(--card)); color: rgb(var(--card-foreground)); }
+.surface-popover { background-color: rgb(var(--popover)); color: rgb(var(--popover-foreground)); }
+
+/* Optional utilities for theme tokens */
+.text-default { color: rgb(var(--foreground)); }
+.bg-default { background-color: rgb(var(--background)); }
 
 /* Font family utilities */
 .font-sans {
