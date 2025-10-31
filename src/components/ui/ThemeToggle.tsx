@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import { SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/react/24/outline'
+import { SunIcon as SunOutline, MoonIcon as MoonOutline, ComputerDesktopIcon as ComputerOutline } from '@heroicons/react/24/outline'
+import { SunIcon as SunSolid, MoonIcon as MoonSolid, ComputerDesktopIcon as ComputerSolid } from '@heroicons/react/24/solid'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from './Button'
 
@@ -21,13 +22,25 @@ export function ThemeToggle() {
   const getIcon = () => {
     switch (theme) {
       case 'light':
-        return <SunIcon className="h-4 w-4" />
+        return (
+          <span className="inline-flex items-center justify-center text-amber-500 dark:text-amber-400">
+            <SunSolid className="h-4 w-4" />
+          </span>
+        )
       case 'dark':
-        return <MoonIcon className="h-4 w-4" />
+        return (
+          <span className="inline-flex items-center justify-center text-sky-500 dark:text-sky-400">
+            <MoonSolid className="h-4 w-4" />
+          </span>
+        )
       case 'system':
-        return <ComputerDesktopIcon className="h-4 w-4" />
+        return (
+          <span className="inline-flex items-center justify-center text-slate-500 dark:text-slate-300">
+            <ComputerSolid className="h-4 w-4" />
+          </span>
+        )
       default:
-        return <SunIcon className="h-4 w-4" />
+        return <SunOutline className="h-4 w-4" />
     }
   }
 
@@ -37,7 +50,7 @@ export function ThemeToggle() {
       size="icon"
       onClick={toggleTheme}
       aria-label={`Switch to ${theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light'} theme`}
-      className="relative overflow-hidden"
+  className="relative overflow-hidden"
     >
       <div className="transition-transform duration-300">
         {getIcon()}
