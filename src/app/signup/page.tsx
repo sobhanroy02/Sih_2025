@@ -52,6 +52,9 @@ export default function AuthPage() {
       login(newUser);
       if (newUser.role === "admin") {
         router.replace("/overview");
+      } else if (newUser.role === "worker") {
+        // Redirect workers to Worker Dashboard after successful signup
+        router.replace("/worker/dashboard");
       } else {
         router.replace("/profile");
       }

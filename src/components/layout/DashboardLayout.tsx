@@ -43,9 +43,10 @@ export function Sidebar({ userType }: SidebarProps) {
         ]
       case 'worker':
         return [
-          { name: 'Assigned Issues', href: '/worker', icon: ClipboardDocumentListIcon },
-          { name: 'Complete Issues', href: '/worker/completed', icon: UserIcon },
-          { name: 'Performance', href: '/worker/performance', icon: HomeIcon },
+          { name: 'Dashboard', href: '/worker/dashboard', icon: HomeIcon },
+          { name: 'Assigned', href: '/worker/assigned', icon: ClipboardDocumentListIcon },
+          { name: 'In Progress', href: '/worker/in-progress', icon: ChartBarIcon },
+          { name: 'Completed', href: '/worker/completed', icon: UserIcon },
         ]
       default: // citizen
         return [

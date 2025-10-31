@@ -1,10 +1,11 @@
- "use client";
+"use client";
 
 import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useIssuesStore } from "@/store";
 import { useSearchParams } from "next/navigation";
+import { useWorkerTasksStore } from "@/store/workerTasks";
 
 type Dept = "Roads" | "Lighting" | "Sanitation" | "Water" | "Parks" | "General";
 
@@ -28,6 +29,8 @@ function mapCategoryToDept(cat: string): Dept {
 
 export default function Page() {
   const { issues, updateIssue } = useIssuesStore();
+  const { getProofsArray } = useWorkerTasksStore();
+  const proofs = getProofsArray();
 
   const searchParams = useSearchParams();
   const initialDept = (searchParams?.get("dept") as Dept | null) || "";
@@ -302,6 +305,30 @@ export default function Page() {
           </div>
         </div>
       </main>
+      {/* Latest Completion Proofs */}
+      <section className="mx-auto max-w-7xl px-4 pb-10">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-800">Latest Completion Proofs</h3>
+            <Link href="/worker/completed" className="text-xs text-primary-600 hover:underline">Go to Worker Completed</Link>
+          </div>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {proofs.map((p) => (
+              <div key={p.taskId} className="rounded-lg border border-slate-200 overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.dataUrl} alt={p.fileName} className="h-32 w-full object-cover" />
+                <div className="px-3 py-2 text-xs text-slate-600">
+                  <div className="font-medium text-slate-900">{p.taskId} — {p.fileName}</div>
+                  <div className="text-[10px]">{new Date(p.uploadedAt).toLocaleString()}</div>
+                </div>
+              </div>
+            ))}
+            {proofs.length === 0 && (
+              <div className="text-sm text-slate-600">No proofs yet. Once workers upload, they’ll appear here automatically.</div>
+            )}
+          </div>
+        </div>
+      </section>
       {selectedIssue && (
         <IssueModal issue={selectedIssue} onClose={() => setSelectedIssue(null)} />
       )}
