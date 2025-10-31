@@ -5,6 +5,8 @@ import withPWA from 'next-pwa'
 const nextConfig = {
   // Updated per Next.js 15 deprecation: move from experimental.turbo to turbopack
   turbopack: {
+    // Ensure the correct project root (avoid picking parent home folder lockfile)
+    root: __dirname,
     rules: {
       '*.svg': {
         loaders: ['@svgr/webpack'],
@@ -13,7 +15,10 @@ const nextConfig = {
     },
   },
   images: {
-    domains: ['localhost', 'example.com'],
+    remotePatterns: [
+      { protocol: 'http', hostname: 'localhost' },
+      { protocol: 'https', hostname: 'example.com' },
+    ],
     formats: ['image/webp', 'image/avif'],
   },
 }

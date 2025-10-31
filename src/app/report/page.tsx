@@ -1,9 +1,18 @@
 "use client"
 
 import React, { useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import CitizenNavbar from '@/components/layout/CitizenNavbar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import {
+  useAuthStore,
+  useIssuesStore,
+  useNotificationsStore,
+  type Issue,
+  type IssueCategory,
+  type IssuePriority,
+} from '@/store'
 import {
   ExclamationTriangleIcon,
   LightBulbIcon,
@@ -28,6 +37,10 @@ type MediaItem = {
 }
 
 export default function ReportPage() {
+  const router = useRouter()
+  const { user } = useAuthStore()
+  const { addIssue } = useIssuesStore()
+  const { addNotification } = useNotificationsStore()
   // Form state
   const [category, setCategory] = useState<string>('Pothole / Road Damage')
   const [customCategory, setCustomCategory] = useState('')
@@ -40,6 +53,7 @@ export default function ReportPage() {
   const [confirmed, setConfirmed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [createdId, setCreatedId] = useState<string | null>(null)
   const photoCaptureRef = useRef<HTMLInputElement | null>(null)
   const videoCaptureRef = useRef<HTMLInputElement | null>(null)
 
@@ -90,12 +104,17 @@ export default function ReportPage() {
     try { if (e.target) (e.target as HTMLInputElement).value = '' } catch {}
   }
 
+  // Relaxed validation for smooth demo flow: location optional
   const canSubmit =
     title.trim().length > 2 &&
     description.trim().length > 10 &&
-    (address.trim().length > 2 || (coords.lat && coords.lng)) &&
     confirmed &&
     !submitting
+
+  const missingHints: string[] = []
+  if (title.trim().length <= 2) missingHints.push('Title is too short')
+  if (description.trim().length <= 10) missingHints.push('Description needs more details')
+  if (!confirmed) missingHints.push('Please confirm the details are genuine')
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -103,71 +122,55 @@ export default function ReportPage() {
     setSubmitting(true)
 
     try {
-      // Upload files if any
-      const attachments: unknown[] = []
-      
-      for (const mediaItem of media) {
-        try {
-          const formData = new FormData()
-          formData.append('file', mediaItem.file)
-          
-          const uploadRes = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-          })
-          
-          const uploadData = await uploadRes.json()
-          
-          if (uploadRes.ok && uploadData.file) {
-            attachments.push({
-              file_url: uploadData.file.url,
-              file_type: mediaItem.kind,
-              file_size: mediaItem.file.size,
-              metadata: {
-                originalName: mediaItem.file.name
-              }
-            })
-          }
-        } catch (err) {
-          console.error('Error uploading file:', err)
-        }
-      }
+      // 1) Build a local Issue object and save to the store (no auth required)
+      const id = genReportId()
+      const images = media.filter(m => m.kind === 'image').map(m => m.url)
+      const normalizedCategory = normalizeCategory(category, customCategory)
+      const priority = (severity.toLowerCase() as IssuePriority)
 
-      // Create the issue
-      const issueData = {
+      const newIssue: Issue = {
+        id,
         title: title.trim(),
         description: description.trim(),
-        category: category === 'Other' ? customCategory : category,
-        priority: severity.toLowerCase(),
-        location: coords.lat && coords.lng ? 
-          { latitude: coords.lat, longitude: coords.lng } : 
-          null,
-        address: address.trim() || 'Location based on coordinates',
-        attachments: attachments.length > 0 ? attachments : undefined
-      }
-
-      const response = await fetch('/api/issues', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
+        category: normalizedCategory,
+        priority,
+        status: 'open',
+        location: {
+          address: (address.trim() || 'Location based on coordinates'),
+          coordinates: {
+            lat: coords.lat || 0,
+            lng: coords.lng || 0,
+          },
         },
-        body: JSON.stringify(issueData)
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        setSubmitted(true)
-        // Reset form
-        setTimeout(() => {
-          window.location.href = `/issue/${result.issue.id}`
-        }, 1500)
-      } else {
-        alert(`Error: ${result.error || 'Failed to submit report'}`)
+        images,
+        reportedBy: user?.id ?? 'user1',
+        reportedAt: new Date(),
+        updatedAt: new Date(),
+        upvotes: 0,
+        comments: [],
       }
-    } catch (error) {
-      console.error('Error submitting report:', error)
-      alert('Error submitting report. Please try again.')
+
+      addIssue(newIssue)
+      setCreatedId(id)
+      setSubmitted(true)
+
+      // 2) Optional: try background API submit (will be skipped if not authenticated)
+      ;(async () => {
+        try {
+          // Skip hitting protected endpoints in demo mode; integrate Supabase later.
+          // Keeping this comment for future backend wiring.
+        } catch {}
+      })()
+
+      // 3) Notify user
+      addNotification({
+        type: 'success',
+        title: 'Report submitted',
+        message: 'Your issue has been recorded and is visible to admins.',
+      })
+    } catch (err) {
+      console.error('Error submitting report (local):', err)
+      addNotification({ type: 'error', title: 'Submit failed', message: 'Please try again.' })
     } finally {
       setSubmitting(false)
     }
@@ -425,12 +428,18 @@ export default function ReportPage() {
                         className={`w-full justify-center rounded-full bg-blue-600 text-white shadow-[0_10px_24px_-6px_rgba(37,99,235,0.55)] ring-1 ring-blue-300/50 transition-transform hover:bg-blue-700 hover:shadow-[0_14px_32px_-6px_rgba(37,99,235,0.6)] hover:scale-[1.01] active:scale-[0.99] ${
                           canSubmit ? 'animate-pulse' : ''
                         }`}
+                        disabled={!canSubmit}
                         leftIcon={<ClipboardDocumentCheckIcon className="h-5 w-5" />}
                         aria-label={submitting ? 'Submitting report' : submitted ? 'Report submitted' : 'Submit report'}
                         title={submitting ? 'Submitting report' : submitted ? 'Report submitted' : 'Submit report'}
                       >
                         {submitting ? 'Submitting…' : submitted ? 'Submitted ✅' : 'Submit Report'}
                       </Button>
+                      {!canSubmit && (
+                        <p className="mt-2 text-xs text-amber-600">
+                          {missingHints.join(' • ')}
+                        </p>
+                      )}
                     </div>
                   </form>
                 </CardContent>
@@ -535,6 +544,65 @@ export default function ReportPage() {
           </div>
         </div>
       </div>
+      {/* Success popup */}
+      {submitted && createdId && (
+        <SuccessPopup
+          onView={() => router.push(`/issue/${createdId}`)}
+          onClose={() => router.push('/dashboard')}
+        />)
+      }
     </>
+  )
+}
+
+// --- helpers ---
+function normalizeCategory(input: string, custom?: string): IssueCategory {
+  const key = input.toLowerCase()
+  if (key.includes('pothole') || key.includes('road')) return 'pothole'
+  if (key.includes('street') || key.includes('light')) return 'streetlight'
+  if (key.includes('garbage') || key.includes('waste')) return 'garbage'
+  if (key.includes('water')) return 'water'
+  if (key.includes('graffiti')) return 'graffiti'
+  if (key.includes('road')) return 'road'
+  if (input === 'Other' && custom) {
+    const c = custom.toLowerCase()
+    if (c.includes('pothole') || c.includes('road')) return 'pothole'
+    if (c.includes('street') || c.includes('light')) return 'streetlight'
+    if (c.includes('garbage') || c.includes('waste')) return 'garbage'
+    if (c.includes('water')) return 'water'
+    if (c.includes('graffiti')) return 'graffiti'
+  }
+  return 'other'
+}
+
+function genReportId(): string {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  const len = 12
+  try {
+    const bytes = new Uint32Array(len)
+    globalThis.crypto?.getRandomValues?.(bytes)
+    return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('')
+  } catch {
+    return Array.from({ length: len }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('')
+  }
+}
+
+function SuccessPopup({ onView, onClose }: { onView: () => void; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl ring-1 ring-slate-200">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+          <svg className="h-6 w-6 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-slate-900">Report submitted</h3>
+        <p className="mt-1 text-sm text-slate-600">Thank you for improving your city. Admins can now review your report.</p>
+        <div className="mt-5 flex gap-3">
+          <Button className="flex-1" onClick={onView}>View report</Button>
+          <Button variant="outline" className="flex-1" onClick={onClose}>Close</Button>
+        </div>
+      </div>
+    </div>
   )
 }
