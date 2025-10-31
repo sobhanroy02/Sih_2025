@@ -101,18 +101,18 @@ export default function Dashboard() {
   return (
     <>
       <CitizenNavbar />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 text-default">
         {/* Hero row */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left content */}
           <section className="lg:col-span-7">
-            <h1 className="text-2xl sm:text-3xl font-heading font-bold text-slate-800">
+            <h1 className="text-2xl sm:text-3xl font-heading font-bold text-slate-900 dark:text-white">
               {`Hi ${user?.name?.split(' ')[0] || 'Citizen'}`}
             </h1>
             <p className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-600 via-blue-600 to-emerald-600 bg-clip-text text-transparent">
               Let&apos;s improve your city today.
             </p>
-            <p className="mt-4 max-w-2xl text-slate-600">
+            <p className="mt-4 max-w-2xl text-slate-600 dark:text-slate-300">
               Report issues, track resolutions and collaborate. Everything you need to make local impact is here.
             </p>
 
@@ -142,8 +142,8 @@ export default function Dashboard() {
 
             {/* How it works */}
             <div className="mt-10">
-              <h2 className="text-lg font-semibold text-slate-900">How CitiZen works</h2>
-              <ol className="mt-3 space-y-3 text-slate-700 list-decimal pl-5">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">How CitiZen works</h2>
+              <ol className="mt-3 space-y-3 text-slate-700 dark:text-slate-300 list-decimal pl-5">
                 <li>Report an issue with photos, location and details. Our system routes it to the right department.</li>
                 <li>Track progress in real-time. Get updates from admins and field workers.</li>
                 <li>Collaborate through comments and votes. Prioritize what matters most to your community.</li>
