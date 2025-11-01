@@ -244,3 +244,8 @@ a:hover { opacity: 0.9; }
     scroll-behavior: auto !important;
   }
 }
+
+/* Navbar helpers: light theme -> white background, dark text; adapts to dark via CSS variables */
+.navbar-link { color: rgb(var(--foreground)) !important; }
+.navbar-brand { color: rgb(var(--foreground)) !important; }
+.navbar-btn { color: rgb(var(--foreground)) !important; border-color: rgba(0,0,0,0.08) !important; }

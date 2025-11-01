@@ -173,12 +173,12 @@ export function DashboardHeader() {
   const { user } = useAuthStore()
 
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 lg:pl-64">
+    <header className="bg-white-600 dark:bg-white-900 border-b border-blue-700 dark:border-gray-800 lg:pl-64">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Mobile menu button */}
         <button
           onClick={() => setSidebarOpen(true)}
-          className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="lg:hidden p-2 rounded-md text-white hover:text-white/90 hover:bg-white-700"
         >
           <Bars3Icon className="h-6 w-6" />
         </button>
@@ -189,7 +189,7 @@ export function DashboardHeader() {
             <input
               type="text"
               placeholder="Search issues, locations..."
-              className="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white text-gray-900 dark:bg-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
               <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +202,7 @@ export function DashboardHeader() {
         {/* Right side controls */}
         <div className="flex items-center space-x-4">
           {/* Notifications */}
-          <button className="relative p-2 text-gray-400 hover:text-gray-500">
+          <button className="relative p-2 text-white hover:text-white/90">
             <BellIcon className="h-6 w-6" />
             <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white dark:ring-gray-900"></span>
           </button>
@@ -212,11 +212,11 @@ export function DashboardHeader() {
 
           {/* User avatar */}
           <div className="relative">
-            <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+            <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-blue-700/60 dark:hover:bg-gray-800">
               <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
                 <UserIcon className="h-4 w-4 text-primary-600 dark:text-primary-400" />
               </div>
-              <span className="hidden sm:block text-sm font-medium text-gray-900 dark:text-white">
+              <span className="hidden sm:block text-sm font-medium text-white">
                 {user?.name}
               </span>
             </button>
